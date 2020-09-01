@@ -52,14 +52,14 @@ const timeOps = [
   { value: 1, text: "按月統計" },
   { value: 2, text: "按季統計" },
   { value: 3, text: "按半年統計" },
-  { value: 4, text: "按年統計" }
+  { value: 4, text: "按年統計" },
 ];
 
 const personOps = [
   { value: 1, text: "醫師報告件數" },
   { value: 2, text: "醫師審核件數" },
   { value: 3, text: "放射師" },
-  { value: 4, text: "護理師" }
+  { value: 4, text: "護理師" },
 ];
 
 const reportOps = [{ value: null, text: "選擇檢查儀器" }];
@@ -72,7 +72,7 @@ const layout = [
   { x: 0, y: 4, w: 3, h: 11, text: "儀器使用", i: "5", val: 1, val2: 1, ops: timeOps, ops2: [] },
   { x: 3, y: 4, w: 3, h: 11, text: "完成時間", i: "6", val: 1, val2: null, ops: timeOps, ops2: [] },
   { x: 6, y: 4, w: 3, h: 11, text: "逾時報告", i: "7", val: 1, ops: timeOps },
-  { x: 9, y: 4, w: 3, h: 11, text: "個別逾時", i: "8", val: 1, val2: null, ops: timeOps, ops2: [] }
+  { x: 9, y: 4, w: 3, h: 11, text: "個別逾時", i: "8", val: 1, val2: null, ops: timeOps, ops2: [] },
 ];
 
 export default {
@@ -87,7 +87,7 @@ export default {
     ImgDtc,
     Finish,
     Delay,
-    Person
+    Person,
   },
   data() {
     return {
@@ -95,23 +95,23 @@ export default {
       //cmps: [CstChart, ImgDtc, ReportNotDone, Workload, Device, Finish, Person],
       selected: null,
       timeOp4TestResult: 1,
-      timeOps
+      timeOps,
     };
   },
   async created() {
     let imgs = await window.axios.get("/GeneralData/SelectNoList?groupNo=ImageQuality");
     let arr = [];
     imgs = imgs.Items;
-    imgs.forEach(s => {
+    imgs.forEach((s) => {
       arr.push({ value: s.No, text: s.Name });
     });
     let reports = await window.axios.get("/employee/SelectList?staffType=35");
-    const persons = [...reports.Items.slice(0, 20).map(s => ({ text: s.Name, value: s.Name }))];
+    const persons = [...reports.Items.slice(0, 20).map((s) => ({ text: s.Name, value: s.Name }))];
     this.layout[1].ops2 = [...arr];
     this.layout[1].val2 = arr[0].value;
     const map = await window.axios.get("/api/Device");
     arr = [];
-    map.Items.forEach(s => {
+    map.Items.forEach((s) => {
       arr.push({ value: s.Id, text: s.Name });
     });
     this.layout[4].ops2 = arr;
@@ -119,13 +119,8 @@ export default {
     this.layout[4].val2 = arr[0].value;
     this.layout[7].ops2 = [...persons];
     this.layout[7].val2 = persons[0].value;
-    // arr = [...this.layout];
-    // arr.forEach((s, i) => {
-    //   s.cmp = this.cmps[i];
-    // });
-    // this.layout = [...arr];
   },
-  mounted() {}
+  mounted() {},
 };
 </script>
 

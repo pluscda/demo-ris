@@ -1,247 +1,425 @@
 <template>
-  <section class="dtx-app">
-    <div class="basic-info"></div>
-    <DtcNavBar v-if="!$route.path.includes('login')"></DtcNavBar>
+  <div id="app">
+    <MainMenu v-if="$route.query.token == null" />
     <router-view />
-    <b-sidebar id="sidebar-right" title="擷取大頭照" right shadow>
-      <div class="px-3 py-2">
-        <video id="video">無法找到拍照相機</video>
+    <div v-if="isLogin">
+      <ModalIdle v-if="isIdle" />
+    </div>
+    <b-modal id="WinWait" ref="Window4Wait" hide-header hide-footer no-fade>
+      <div class="d-block text-center text-primary">
+        <b-spinner class="align-middle mr-1"></b-spinner>
+        <strong>{{ this.waitMsg }}載入中, 請稍待 ...</strong>
       </div>
-      <b-button variant="warning" @click="takepicture" size="md" class="ml-4">擷取相片</b-button>
-      <canvas id="canvas" hidden></canvas>
-    </b-sidebar>
-  </section>
+    </b-modal>
+    <b-modal
+      id="WinHelp"
+      ref="Window4Help"
+      centered
+      hide-footer
+      no-fade
+      scrollable
+      size="xl"
+      body-class="py-1 themeModal"
+      :header-bg-variant="window4Help.windowHeadBgV"
+      :header-text-variant="window4Help.windowHeadTxV"
+      :body-bg-variant="window4Help.windowBodyBgV"
+      :body-text-variant="window4Help.windowBodyTxV"
+    >
+      <template slot="modal-title">
+        <font-awesome-icon icon="question" class="mr-1" />
+        <span class="zhTW">{{ window4Help.windowTitle }}</span>
+      </template>
+      <div class="d-block zhTW">
+        <b-row>
+          <b-col class="px-1">
+            <div v-html="window4Help.windowContent" class="helpBlock"></div>
+          </b-col>
+        </b-row>
+      </div>
+    </b-modal>
+  </div>
 </template>
+
 <script>
-import DtcNavBar from "@/components/land/DtcNavBarExt.vue";
-import { store, actions } from "@/store/global.js";
-import html2canvas from "html2canvas";
+import MainMenu from "@/components/NavBarMain.vue";
+import { setCulture, L10n, loadCldr } from "@syncfusion/ej2-base";
+import { i18n } from "@/i18n/zh-Hant";
+import ModalIdle from "@/components/ModalIdle";
+L10n.load(i18n);
+setCulture("zh-Hant");
+loadCldr(
+  require("cldr-data/supplemental/numberingSystems.json"),
+  require("cldr-data/main/zh-Hant/ca-gregorian.json"),
+  require("cldr-data/main/zh-Hant/numbers.json"),
+  require("cldr-data/main/zh-Hant/timeZoneNames.json")
+);
 
 export default {
-  name: "dtx-app",
+  name: "App",
+  components: { MainMenu, ModalIdle },
   data() {
     return {
-      isSaveOk: false,
-      video: "",
-      canvas: "",
-      width: 300,
-      height: 300,
-      id: "",
+      waitMsg: "",
+      traceMode: false,
+      window4Help: {
+        windowTitle: "",
+        htmlContent: false,
+        windowContent: "",
+        windowHeadBgV: "",
+        windowHeadTxV: "",
+        windowBodyBgV: "",
+        windowBodyTxV: ""
+      },
+      options: {}
     };
   },
-  components: { DtcNavBar },
-
   computed: {
-    takePic() {
-      return store.openCamera;
+    isIdle() {
+      return this.$store.state.idleVue.isIdle;
     },
+    isLogin() {
+      return this.$store.state.isLogin;
+    }
   },
-
   methods: {
-    async takepicture() {
-      var context = this.canvas.getContext("2d");
-      this.canvas.width = this.width;
-      this.canvas.height = this.height;
-      context.drawImage(this.video, 0, 0, this.width, this.height);
-      var data = canvas.toDataURL("image/png");
-      this.canvas.width = this.width;
-      this.canvas.height = this.height;
-      context.drawImage(this.video, 0, 0, this.width, this.height);
-      const urlImg = canvas.toDataURL("image/png");
-      const obj = { MilitaryIdNo: this.id, Photo: urlImg };
-      try {
-        await actions.uploadBase64Img(obj);
-        store.base64Img = urlImg;
-        this.$bvToast.toast(`照片已上傳`, {
-          title: "系統資訊",
-          autoHideDelay: 5000,
-          variant: "success",
-        });
-      } catch (e) {
-        alert(e);
-      }
+    WaitingShow(msg) {
+      //console.log(this.$logs())
+      this.waitMsg = msg ? msg : "";
+      this.$refs["Window4Wait"].show();
     },
-    printCurrentPage() {
-      document.documentElement.scrollTop = 0;
-      const el = document.querySelector("#dtc-print-it");
-      const needHides = document.querySelectorAll(".hide-while-print");
-      if (needHides) {
-        needHides.forEach((el) => (el.style.display = "none"));
+    WaitingHide() {
+      //console.log(this.$logs())
+      setTimeout(x => {
+        this.waitMsg = "";
+        this.$nextTick(() => this.$refs["Window4Wait"].hide());
+      }, 500);
+    },
+    HelpShow(cfg) {
+      //
+      this.window4Help.htmlContent = false;
+      this.window4Help.windowTitle = "功能說明";
+      this.window4Help.windowContent = "說明內容";
+      this.window4Help.windowHeadBgV = "primary";
+      this.window4Help.windowHeadTxV = "white";
+      this.window4Help.windowBodyBgV = "";
+      this.window4Help.windowBodyTxV = "";
+      if (cfg) {
+        // 依參數物件(object)內容來調整相關 property 之值
+        if (this.$Exists(cfg.Content)) {
+          this.window4Help.windowContent = cfg.Content;
+        }
       }
-      // const borderElms = document.querySelectorAll(".my-3-grid > div");
-      // if(!borderElms) return;
-      // //alert(borderElms.length)
-      // borderElms.forEach(el => {{
-      //   el.style.borderColor = "red !important";
-      //   el.style.borderLeftColor = "red !important";
-      // }});
-      if (!el) {
-        window.print();
+      this.$refs["Window4Help"].show();
+    },
+    HelpHide() {
+      setTimeout(x => {
+        this.$nextTick(() => this.$refs["Window4Help"].hide());
+      }, 500);
+    },
+    TimingMessage(v, t = 1) {
+      // 限時自動消失的訊息
+      // Bootstrap component: Toast 應用
+      let hClass = [];
+      let bClass = [];
+      let autoHideDelay = 3000;
+      if (t === 2) {
+        hClass = ["bg-danger", "text-light", "zhTW"];
+        bClass = ["bg-light", "text-danger", "zhTW"];
+        autoHideDelay = 9000;
       } else {
-        let scale = 1;
-        html2canvas(el, { backgroundColor: "#FFF", scale }).then((canvas) => {
-          const src = canvas.toDataURL();
-          this.printImage(src);
-        });
+        hClass = ["bg-success", "text-light", "zhTW"];
+        bClass = ["bg-light", "text-dark", "zhTW"];
       }
-    },
-    printImage(src) {
-      const needShows = document.querySelectorAll(".hide-while-print");
-      if (needShows) {
-        needShows.forEach((el) => (el.style.display = "block"));
-      }
-      var win = window.open("about:blank", "_new");
-      win.document.open();
-      win.document.write(
-        [
-          "<html>",
-          "   <head>",
-          "   </head>",
-          "   <style>@page { size: A4 landscape }</style>",
-          '   <body onload="window.print()" onafterprint="window.close()">',
-          '       <img src="' + src + '"/>',
-          "   </body>",
-          "</html>",
-        ].join("")
-      );
-      win.document.close();
-    },
-    async init() {
-      this.video = document.getElementById("video");
-      this.canvas = document.getElementById("canvas");
-      navigator.mediaDevices
-        .getUserMedia({ video: true, audio: false })
-        .then((stream) => {
-          video.srcObject = stream;
-          video.play();
-        })
-        .catch(function(err) {
-          console.log("An error occurred: " + err);
-        });
-      this.initVid();
-    },
-    initVid() {
-      this.video.addEventListener("canplay", function(ev) {
-        this.video.setAttribute("width", this.width);
-        this.video.setAttribute("height", this.height);
-        this.canvas.setAttribute("width", this.width);
-        this.canvas.setAttribute("height", this.height);
+      const h = this.$createElement;
+      let vMessage = h("p", { class: ["text-left", "mb-0"] }, [h("strong", {}, v)]);
+      //
+      let vTitle = h("div", { class: ["d-flex", "flex-grow-1", "align-items-baseline", "mr-2"] }, [
+        h("strong", { class: "mr-2" }, "系統訊息"),
+        h("small", { class: "ml-auto text-italics" }, `${this.$GetTimeStamp()}`)
+      ]);
+      this.$bvToast.toast([vMessage], {
+        title: [vTitle],
+        headerClass: hClass,
+        bodyClass: bClass,
+        //noCloseButton: true,
+        autoHideDelay: autoHideDelay
       });
     },
+    async CommonGet(path) {
+      // 傳回 dataTable
+      console.log(this.$logs(path, "CommonGet"));
+      let message = "error";
+      let methodName = path;
+      return await this.$http
+        .get(path)
+        .then(r => {
+          console.log(this.$logs("Done", methodName));
+          if (r && r.data) {
+            if (r.data.Success) {
+              return this.$DeepCopy(r.data.Data);
+            } else {
+              message = r.data.Message;
+            }
+          }
+          console.log(this.$logs(message, path));
+          return [];
+        })
+        .catch(err => {
+          this.$stdErr(err, methodName);
+          return [];
+        });
+    },
+    async TemplateGet(path) {
+      // 傳回 template 用的 dataRow
+      let message = "error";
+      path = `${path}/template`;
+      let methodName = path;
+      return await this.$http
+        .get(path)
+        .then(r => {
+          if (r && r.data) {
+            if (r.data.Success) {
+              return this.$DeepCopy(r.data.Data[0]);
+            } else {
+              message = r.data.Message;
+            }
+          }
+          console.log(this.$logs(message, path));
+          return {};
+        })
+        .catch(err => {
+          this.$stdErr(err, methodName);
+          return {};
+        });
+    },
+    async CommonPost(path, paramObj) {
+      // 傳回 dataTable
+      console.log(this.$logs(path, "CommonPost"));
+      let message = "error";
+      let methodName = path;
+      return await this.$http
+        .post(path, paramObj)
+        .then(r => {
+          console.log(this.$logs("Done", methodName));
+          if (r && r.data) {
+            if (r.data.Success) {
+              return true;
+            } else {
+              message = r.data.Message;
+            }
+          }
+          console.log(this.$logs(message, path));
+          return false;
+        })
+        .catch(err => {
+          this.$stdErr(err, methodName);
+          return false;
+        });
+    },
+    async CommonPut(path, paramObj) {
+      // 傳回 dataTable
+      let message = "error";
+      let methodName = "PUT:" + path;
+      return await this.$http
+        .put(path, paramObj)
+        .then(r => {
+          if (r && r.data) {
+            if (r.data.Success) {
+              return true;
+            } else {
+              message = r.data.Message;
+            }
+          }
+          console.log(this.$logs(message, path));
+          return false;
+        })
+        .catch(err => {
+          this.$stdErr(err, methodName);
+          return false;
+        });
+    },
+    async CommonDelete(path, id) {
+      // 傳回 dataTable
+      let message = "error";
+      let methodName = `DELETE: ${path}/${id}`;
+      return await this.$http
+        .delete(`${path}/${id}`)
+        .then(r => {
+          if (r && r.data) {
+            if (r.data.Success) {
+              return true;
+            } else {
+              message = r.data.Message;
+            }
+          }
+          console.log(this.$logs(message, path));
+          return false;
+        })
+        .catch(err => {
+          this.$stdErr(err, methodName);
+          return false;
+        });
+    },
+    async OptionsLoader(GDSGroupId, GDSDataType) {
+      let methodName = "OLoader";
+      let success = false;
+      //if(GDSGroupId) {
+      methodName += ":" + GDSGroupId;
+      console.log(this.$logs("Call", methodName));
+      let message = "ERROR";
+      //
+      if (!GDSDataType) {
+        GDSDataType = "T";
+      }
+      let valueField = GDSDataType === "T" ? "Value4Text" : GDSDataType === "N" ? "Value4Numeric" : GDSDataType === "B" ? "Value4Boolean" : "Value4DateTime";
+      //
+      this.options[GDSGroupId] = [];
+      //console.log(this.$logs(`${this.$Exists(this.options[GDSGroupId])}`, methodName))
+      //console.log(this.$logs(``, methodName))
+      success = await this.$http
+        .get(`GDSet/${GDSGroupId}`)
+        .then(r => {
+          let resultState = false;
+          if (r && r.data) {
+            if (r.data.Success) {
+              resultState = true;
+              //
+              let raw = this.$DeepCopy(r.data.Data);
+              if (raw && raw.length > 0) {
+                raw.forEach(e => {
+                  if (e.RecActivated) {
+                    this.options[GDSGroupId].push({
+                      text: e.GDataName,
+                      value: e[valueField],
+                      //
+                      // 額外附加-1, 如為 deteled 則設為 disabled
+                      //disabled: !e.RecActivated,
+                      //
+                      // 額外附加-2, GUID
+                      guid: e.GDSetGUID
+                    });
+                  }
+                });
+              }
+              //
+            } else {
+              message = r.data.Message;
+            }
+          }
+          console.log(this.$logs(resultState ? `Done (${this.options[GDSGroupId] ? this.options[GDSGroupId].length : "none"})` : message, methodName));
+          //
+          return resultState;
+        })
+        .catch(err => {
+          this.$stdErr(err, methodName);
+          return false;
+        });
+      //}
+      return success;
+    },
+    async CallLoader() {
+      let methodName = "CallLoader";
+      console.log(this.$logs(null, methodName));
+      //
+      let option2load = [
+        { groupId: "Activation", dataType: "T" },
+        { groupId: "ImageQuality", dataType: "T" }
+      ];
+      option2load.forEach(async e => {
+        if (e) {
+          console.log(this.$logs(`Call ${e.groupId}`, methodName));
+          await this.OptionsLoader(e.groupId, e.dataType);
+        }
+      });
+      console.log(this.$logs("Done", methodName));
+    }
   },
-
-  async created() {
-    this.$root.$on("print-final-report", () => this.printCurrentPage());
+  created() {
+    //console.clear()
+    if (!localStorage["theme-modal-bg-color"]) {
+      localStorage["theme-modal-bg-color"] = "black";
+    }
+    let methodName = "App.created";
+    console.log(this.$logs(null, methodName));
+    //
+    console.log(this.$logs("END", methodName));
   },
   async mounted() {
-    this.$root.$on("loginSuccess", async () => {
-      const { Items: p1 } = await actions.getPrivatePhrases("?$inlinecount=allpages");
-      const { Items: p2 } = await actions.getPublicPhrases("?$inlinecount=allpages");
-      const sum = [...p1, ...p2];
-      await this.$vlf.setItem("phrase", sum);
-      //alert(sum.length);
-    });
-    this.$vlf.createInstance({
-      storeName: "phraseStore",
-    });
-  },
-  watch: {
-    takePic(v) {
-      if (!v) return;
-      if (!this.id) {
-        this.id = v;
-        this.init();
-      }
-      this.id = v;
-    },
-    '$route' (to, from) {
-      window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: 'smooth'
-    });
-    }
+    let methodName = "App.mounted";
+    console.log(this.$logs(null, methodName));
+    //
+    // 先留下解析度資訊, 日後或許有用...
+    //console.log(this.$logs(`BView:${document.body.clientWidth}x${document.body.clientHeight}`, methodName))
+    //console.log(this.$logs(`WView:${window.innerWidth}x${window.innerHeight}`, methodName))
+    //
+    this.WaitingShow();
+    //
+    // 用 CallLoader 不能達到 等待 的效果, 再研究看看...
+    //await this.CallLoader()
+    // 暫時先逐一叫用吧
+    await this.OptionsLoader("ImageQuality");
+    // await this.OptionsLoader('Activation')
+    //
+    /*
+		// 20191103 Pollux, 測試 RESTful API
+		console.log((await this.CommonGet('GDSet/Groups'))[0])
+		console.log((await this.TemplateGet('GDSet/item')))
+		let gtemp = await this.TemplateGet('GDSet/Group')
+		console.log(gtemp)
+		gtemp.GDSetGrpId = 'MT1'
+		gtemp.GDSetGrpName = 'MTest1'
+		gtemp.GDSetDesc = 'My Test #1'
+		let result = await this.CommonPost('GDSet/Group', gtemp)
+		console.log(result)
+		result = await this.CommonPut('GDSet/Group', gtemp)
+		console.log(result)
+		result = await this.CommonDelete('GDSet/Group', gtemp.GDSetGrpId)
+		console.log(result)
+		//
+		// 20191104 Pollux, 測試 RESTful API
+		let itemp = await this.TemplateGet('GDSet/Item')
+		console.log(itemp)
+		itemp.GDSetGrpId = 'MT1'
+		itemp.GDataId = 'Test1'
+		itemp.GDataName = itemp.GDataId
+		itemp.GDataDesc = 'Item Test #1'
+		itemp.Value4Text = 'Item Test #1 for TEXT value'
+		result = await this.CommonPost('GDSet/Item', itemp)
+		console.log(result)
+		itemp.GDataDesc = 'Item Test #1 (updated)'
+		result = await this.CommonPut('GDSet/Item', itemp)
+		console.log(result)
+		result = await this.CommonDelete(`GDSet/${itemp.GDSetGrpId}`, itemp.GDataId)
+		console.log(result)
+		*/
+    // 20191104 Pollux, VueX + JWT Testing
+    /*
+		this.$store.commit('UserAuthorized', 'xyz')
+		console.log(this.$store.state.Profile4User)
+		let t1 = await this.CommonGet('GDSet1/Group1')
+		console.log(t1)
+		*/
+    /*
+		console.log(await this.TemplateGet('CST'))
+		console.log(await this.CommonGet(`CST/123`))
+		console.log(await this.CommonGet(`CST/iTems`))
+		*/
+    //
+    this.WaitingHide();
+    //
+    let GDSGroupId = "ImageQuality";
+    console.log(this.$logs(`[${this.options[GDSGroupId] ? this.options[GDSGroupId].length : "none"}]`, methodName));
+    //
+    console.log(this.$logs("END", methodName));
   }
 };
 </script>
 
-<style lang="scss">
-@import "node_modules/bootstrap/scss/bootstrap";
-@import "node_modules/bootstrap-vue/src/index.scss";
-
-/deep/
-  .custom-switch
-  .custom-control-input:disabled:checked
-  ~ .custom-control-label::before {
-  background-color: var(--primary) !important;
+<style scoped>
+.helpBlock {
+  min-height: 300px;
 }
-.dtx-app {
-  padding: 0px;
-  margin: 0px;
-  width: 100vw;
-  min-height: 100vh;
-  background: #212121;
-  color: white;
-  overflow-x: hidden;
-}
-#app {
-  font-family: "Microsoft JhengHei", Helvetica, Arial, sans-serif !important;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  position: relative;
-  //color: #2c3e50;
-  box-sizing: border-box;
-  margin: 0px;
-  padding: 0px;
-  font-weight: bold !important;
-  font-size: 1rem !important;
-  background: #212121;
-}
-.steps-nav {
-  display: grid;
-  margin-top: 12px;
-  grid-template-columns: max-content max-content max-content max-content max-content;
-  justify-content: space-around;
-  height: 30px;
-}
-
-#video {
-  max-width: 300px;
-  width: 300px;
-  min-width: 300px;
-  transform: translateX(-4px);
-  border: 1px solid black;
-}
-.basic-info {
-  position: absolute;
-  top: 0px;
-}
-</style>
-
-<style>
-textarea {
-  resize: none;
-}
-body,
-html {
-  font-family: "Microsoft JhengHei", Helvetica, Arial, sans-serif !important;
-}
-.ellipsis {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.ani-spin {
-  animation: spinIcon 1s infinite ease-out;
-}
-
-@keyframes spinIcon {
-  from {
-    transform: rotate(360deg);
-  }
-  to {
-    transform: rotate(0deg);
-  }
+.ag-watermark {
+  display: none !important;
 }
 </style>

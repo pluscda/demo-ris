@@ -2,6 +2,8 @@
 
 import Vue from "vue";
 import axios from "axios";
+import * as configs from "@/config";
+import store from "../store";
 
 // Full config:  https://github.com/axios/axios#request-config
 // axios.defaults.baseURL = process.env.baseURL || process.env.apiUrl || '';
@@ -9,13 +11,11 @@ import axios from "axios";
 // axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
 
 let config = {
-  baseURL: "/PhysicalExam",
-  //process.env.NODE_ENV === "production" ? "/PhysicalExam" : "http://192.168.1.200/PhysicalExam/",
+  baseURL: process.env.NODE_ENV === "production" ? "/RIS_WF1" : "/",
   headers: {
-    "Content-Type": "application/json",
-    //mimeType: "multipart/form-data",
+    "Content-Type": "application/json"
   },
-  timeout: 20 * 1000, // Timeout
+  timeout: 20 * 1000 // Timeout
   // withCredentials: true // Check cross-site Access-Control
 };
 
@@ -24,7 +24,7 @@ const _axios = axios.create(config);
 _axios.interceptors.request.use(
   function(config) {
     // Do something before request is sent
-    config.headers.Authorization = "Bearer " + sessionStorage.token;
+    config.headers.Authorization = "Bearer " + store.state.Profile4User[configs.JWTTokenName];
     return config;
   },
   function(error) {
@@ -52,13 +52,13 @@ Plugin.install = function(Vue, options) {
     axios: {
       get() {
         return _axios;
-      },
+      }
     },
     $axios: {
       get() {
         return _axios;
-      },
-    },
+      }
+    }
   });
 };
 
