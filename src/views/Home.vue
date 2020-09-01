@@ -84,7 +84,7 @@ import ImgDtc from "@/components/home/Img";
 import Finish from "@/components/home/Finish";
 import Delay from "@/components/home/Delay";
 import Person from "@/components/home/Person";
-import Loading from "@/components/home/Loading";
+//import Loading from "@/components/home/Loading";
 import { store, mutations } from "@/store/global.js";
 
 Chart.defaults.global.defaultFontStyle = "bold";
