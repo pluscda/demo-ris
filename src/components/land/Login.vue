@@ -35,6 +35,7 @@ export default {
 
   methods: {
     async login() {
+      this.$root.$emit("loginSuccess", map);
       const obj = {
         Name: this.name,
         Password: this.pwd,
