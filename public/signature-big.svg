@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="110" height="52" viewBox="0 0 110 52">
+  <defs>
+    <clipPath id="clip-signature-big">
+      <rect width="110" height="52"/>
+    </clipPath>
+  </defs>
+  <g id="signature-big" clip-path="url(#clip-signature-big)">
+    <rect width="110" height="52" fill="#fff"/>
+    <g id="Group_19" data-name="Group 19" transform="translate(-408 -667)">
+      <g id="Rectangle_1167" data-name="Rectangle 1167" transform="translate(408 667)" fill="#fffcfc" stroke="#b20000" stroke-width="3">
+        <rect width="110" height="52" rx="3" stroke="none"/>
+        <rect x="1.5" y="1.5" width="107" height="49" rx="1.5" fill="none"/>
+      </g>
+      <text id="_12345678" data-name="12345678" transform="translate(429 687)" fill="#b20000" font-size="15" font-family="HelveticaNeue, Helvetica Neue"><tspan x="0" y="0">12345678</tspan></text>
+      <text id="歐陽鎮華" transform="translate(433 709)" fill="#b20000" font-size="15" font-family="PingFangSC-Regular, PingFang SC"><tspan x="0" y="0">歐陽鎮華</tspan></text>
+      <line id="Line_84" data-name="Line 84" x2="109" transform="translate(408.5 691.5)" fill="none" stroke="#b20000" stroke-width="1"/>
+    </g>
+  </g>
+</svg>
