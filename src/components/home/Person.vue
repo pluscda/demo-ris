@@ -6,8 +6,6 @@
 //import VueCharts from "vue-chartjs";
 import { Radar, mixins } from "vue-chartjs";
 const { reactiveData } = mixins;
-
-// #8 last one
 export default {
   extends: Radar,
   mixins: [reactiveData],
@@ -16,7 +14,7 @@ export default {
   data() {
     return {
       chartdata: {},
-      labels: window.taipeis,
+      labels: [],
       options: {
         responsive: true,
         maintainAspectRatio: false
@@ -25,7 +23,7 @@ export default {
   },
   methods: {
     getRandomInt() {
-      return Math.floor(Math.random() * (1050 - 5 + 1)) + 225;
+      return Math.floor(Math.random() * (50 - 5 + 1)) + 5;
     },
     async getData() {
       // TODO: get data from person id and time
@@ -37,7 +35,7 @@ export default {
         labels,
         datasets: [
           {
-            label: "役男分佈",
+            label: "使用儀器逾時報告(單位分鐘)",
             backgroundColor: "rgba(255,99,132,0.2)",
             borderColor: "rgba(255,99,132,1)",
             pointBackgroundColor: "rgba(255,99,132,1)",
@@ -51,20 +49,17 @@ export default {
     }
   },
   async mounted() {
-    const data = [
-      this.getRandomInt(),
-      this.getRandomInt(),
-      this.getRandomInt(),
-      this.getRandomInt(),
-      this.getRandomInt(),
-      this.getRandomInt(),
-      this.getRandomInt(),
-      this.getRandomInt(),
-      this.getRandomInt(),
-      this.getRandomInt(),
-      this.getRandomInt(),
-      this.getRandomInt()
-    ];
+    const map = await window.axios.get("/api/Device");
+    let arr = [];
+    map.Items.forEach(s => {
+      arr.push(s.Name);
+    });
+    const labels = arr;
+    const data = [];
+    labels.forEach(() => {
+      data.push(this.getRandomInt());
+    });
+    this.labels = labels;
     this.drawReport(data);
   },
   watch: {

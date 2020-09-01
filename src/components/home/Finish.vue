@@ -6,10 +6,6 @@
 //import VueCharts from "vue-chartjs";
 import { HorizontalBar, mixins } from "vue-chartjs";
 const { reactiveData } = mixins;
-
-// this is #6 in dashboard
-const PRE_URL =
-  "/reportStatistics/IssueDateAvg?deviceguid={%2}&startDate={%0}&endDate={%1}";
 export default {
   extends: HorizontalBar,
   mixins: [reactiveData],
@@ -17,8 +13,6 @@ export default {
   props: ["time", "type"],
   data() {
     return {
-      deviceId: 1,
-      myTime: 1,
       lables: [],
       chartdata: {},
       options: {
@@ -38,44 +32,18 @@ export default {
   },
   methods: {
     getRandomInt() {
-      return Math.floor(Math.random() * (11150 - 5 + 1)) + 3000;
+      return Math.floor(Math.random() * (50 - 5 + 1)) + 5;
     },
-    convertMin2Hour(num) {
-      let h = num;
-      h = (num / 60).toFixed(2);
-      return h;
-    },
-    async getData(num = 1, device = 1) {
-      this.$root.$emit("完成時間", true);
-      const labels = [];
-      const data = [];
-      const today = window.dtcToday;
-      const start = window.dtcStart(num);
-      const url = PRE_URL.replace(/{%0}/, start)
-        .replace(/{%1}/, today)
-        .replace(/{%2}/, device);
-
-      try {
-        const map = await window.axios.get(url);
-        map.Items.forEach(s => {
-          labels.push(s.EMPLOYEENAME);
-          data.push(s.PAYDAY > 0 ? this.convertMin2Hour(s.PAYDAY) : 0);
-        });
-      } catch (e) {
-        alert(e);
-      }
-      this.labels = labels;
-      this.$root.$emit("完成時間", false);
-      this.drawReport(data);
+    async getData() {
+      //this.drawReport(data);
     },
     drawReport(data) {
-      const labels = [];
-
+      const labels = this.labels;
       this.chartData = {
-        labels: ["體檢人數", "實際報到人數"],
+        labels,
         datasets: [
           {
-            label: `報到比率(${this.rate}%)`,
+            label: "平均完成時間(分鐘)TOP 10人員",
             backgroundColor: "#ffc107",
             data
           }
@@ -84,22 +52,21 @@ export default {
     }
   },
   async mounted() {
-    const n1 = this.getRandomInt();
-    const n2 = this.getRandomInt();
-    const small = Math.min(n1, n2);
-    const big = Math.max(n1, n2);
-    this.rate = ((small / big) * 100).toFixed(1);
-    this.drawReport([big, small]);
-    //this.getData();
+    let reports = await window.axios.get("/employee/SelectList?staffType=35");
+    const labels = reports.Items.slice(10, 20).map(s => s.Name);
+    this.labels = labels;
+    const data = [];
+    labels.forEach(() => {
+      data.push(this.getRandomInt());
+    });
+    this.drawReport(data);
   },
   watch: {
     time(val) {
-      this.myTime = val;
-      this.getData(val, this.deviceId);
+      // val from 1 ~ 4
     },
     type(val) {
-      this.deviceId = val;
-      this.getData(this.myTime, val);
+      // device id
     }
   }
 };

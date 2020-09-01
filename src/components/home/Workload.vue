@@ -1,5 +1,4 @@
 <div class="dtc-chart">
-    
     <Bar :chartdata="chartData" :options="chartOptions"  />
 </div>
 
@@ -7,17 +6,6 @@
 //import VueCharts from "vue-chartjs";
 import { Bar, mixins } from "vue-chartjs";
 const { reactiveData } = mixins;
-// #4
-const PRE_URL_1 =
-  "/reportStatistics/DxStatusTotalCount?staftype=20&startDate={%0}&endDate={%1}";
-const PRE_URL_2 =
-  "/reportStatistics/DxStatusTotalVerifyCount?startDate={%0}&endDate={%1}";
-const PRE_URL_3 =
-  "/reportStatistics/DxStatusTotalCount?staftype=35&startDate={%0}&endDate={%1}";
-const PRE_URL_4 =
-  "/reportStatistics/DxStatusTotalCount?staftype=51&startDate={%0}&endDate={%1}";
-
-const years = ["109", "108", "107", "106"];
 export default {
   labels: [],
   extends: Bar,
@@ -26,10 +14,6 @@ export default {
   props: ["time", "type"],
   data() {
     return {
-      years,
-      year: "109",
-      url: PRE_URL_1,
-      currentTime: "",
       chartdata: {},
       options: {
         responsive: true,
@@ -50,34 +34,17 @@ export default {
     getRandomInt() {
       return Math.floor(Math.random() * (50 - 5 + 1)) + 5;
     },
-    async getData(num = 1) {
-      this.$root.$emit("工作總量", true);
-      const labels = [];
-      const data = [];
-      const today = window.dtcToday;
-      const start = window.dtcStart(num);
-      const url = this.url.replace(/{%0}/, start).replace(/{%1}/, today);
-      try {
-        const map = await window.axios.get(url);
-        map.Items.forEach(s => {
-          labels.push(s.EMPLOYEENAME);
-          data.push(s.COUNT > 0 ? parseInt(s.COUNT) : 0);
-        });
-      } catch (e) {
-        alert(e);
-      }
-      this.labels = labels;
-      this.$root.$emit("工作總量", false);
-      this.drawReport(data);
+    async getData() {
+      //this.drawReport();
     },
     drawReport(data) {
-      const labels = window.taipeis;
+      const labels = this.labels;
       this.chartData = {
         labels,
         datasets: [
           {
-            label: "役男人數",
-            backgroundColor: "#E46651",
+            label: "報告件數",
+            backgroundColor: "#28a745",
             data
           }
         ]
@@ -85,37 +52,18 @@ export default {
     }
   },
   async mounted() {
-    this.drawReport([
-      this.getRandomInt(),
-      this.getRandomInt(),
-      this.getRandomInt(),
-      this.getRandomInt(),
-      this.getRandomInt(),
-      this.getRandomInt(),
-      this.getRandomInt(),
-      this.getRandomInt(),
-      this.getRandomInt(),
-      this.getRandomInt(),
-      this.getRandomInt(),
-      this.getRandomInt()
-    ]);
+    let reports = await window.axios.get("/employee/SelectList?staffType=35");
+    const labels = reports.Items.slice(0, 10).map(s => s.Name);
+    this.labels = labels;
+    const data = [];
+    labels.forEach(() => {
+      data.push(this.getRandomInt());
+    });
+    this.drawReport(data);
   },
   watch: {
     time(val) {
-      this.currentTime = val;
-      this.getData(val);
-    },
-    type(val) {
-      if (val == 1) {
-        this.url = PRE_URL_1;
-      } else if (val == 2) {
-        this.url = PRE_URL_2;
-      } else if (val == 3) {
-        this.url = PRE_URL_3;
-      } else {
-        this.url = PRE_URL_4;
-      }
-      this.getData(this.currentTime);
+      // val from 1 ~ 4
     }
   }
 };
@@ -124,13 +72,5 @@ export default {
 <style lang="scss" scoped>
 .dtc-chart {
   color: white;
-  position: relative;
-  .years-dtc {
-    position: absolute;
-    top: -60px;
-    left: 10%;
-    width: 200px;
-    height: 40px;
-  }
 }
 </style>
