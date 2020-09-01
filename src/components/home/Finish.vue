@@ -9,11 +9,9 @@ const { reactiveData } = mixins;
 export default {
   extends: HorizontalBar,
   mixins: [reactiveData],
-  name: "homeFinish",
-  props: ["time", "type"],
+  name: "homeCST",
   data() {
     return {
-      lables: [],
       chartdata: {},
       options: {
         responsive: true,
@@ -33,41 +31,43 @@ export default {
   methods: {
     getRandomInt() {
       return Math.floor(Math.random() * (50 - 5 + 1)) + 5;
-    },
-    async getData() {
-      //this.drawReport(data);
-    },
-    drawReport(data) {
-      const labels = this.labels;
-      this.chartData = {
-        labels,
-        datasets: [
-          {
-            label: "平均完成時間(分鐘)TOP 10人員",
-            backgroundColor: "#ffc107",
-            data
-          }
-        ]
-      };
     }
   },
-  async mounted() {
+  mounted() {
+    this.renderChart(this.chartdata, this.options);
+    //alert("w");
+  },
+  async created() {
     let reports = await window.axios.get("/employee/SelectList?staffType=35");
-    const labels = reports.Items.slice(10, 20).map(s => s.Name);
-    this.labels = labels;
-    const data = [];
-    labels.forEach(() => {
-      data.push(this.getRandomInt());
-    });
-    this.drawReport(data);
-  },
-  watch: {
-    time(val) {
-      // val from 1 ~ 4
-    },
-    type(val) {
-      // device id
-    }
+    const labels = reports.Items.slice(0, 10).map(s => s.Name);
+    this.chartData = {
+      labels,
+      datasets: [
+        {
+          label: "人員名稱",
+          backgroundColor: "#ffc107",
+          //type: "horizontalBar",
+          data: [
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt()
+          ]
+        }
+      ]
+    };
   }
 };
 </script>

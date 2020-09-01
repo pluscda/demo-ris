@@ -7,11 +7,9 @@
 import { Bar, mixins } from "vue-chartjs";
 const { reactiveData } = mixins;
 export default {
-  labels: [],
   extends: Bar,
   mixins: [reactiveData],
-  name: "workload",
-  props: ["time", "type"],
+  name: "homeCST",
   data() {
     return {
       chartdata: {},
@@ -33,38 +31,36 @@ export default {
   methods: {
     getRandomInt() {
       return Math.floor(Math.random() * (50 - 5 + 1)) + 5;
-    },
-    async getData() {
-      //this.drawReport();
-    },
-    drawReport(data) {
-      const labels = this.labels;
-      this.chartData = {
-        labels,
-        datasets: [
-          {
-            label: "報告件數",
-            backgroundColor: "#28a745",
-            data
-          }
-        ]
-      };
     }
   },
-  async mounted() {
+  mounted() {
+    this.renderChart(this.chartdata, this.options);
+    //alert("w");
+  },
+  async created() {
     let reports = await window.axios.get("/employee/SelectList?staffType=35");
     const labels = reports.Items.slice(0, 10).map(s => s.Name);
-    this.labels = labels;
-    const data = [];
-    labels.forEach(() => {
-      data.push(this.getRandomInt());
-    });
-    this.drawReport(data);
-  },
-  watch: {
-    time(val) {
-      // val from 1 ~ 4
-    }
+    this.chartData = {
+      labels,
+      datasets: [
+        {
+          label: "醫師報告件數",
+          backgroundColor: "#28a745",
+          data: [
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt(),
+            this.getRandomInt()
+          ]
+        }
+      ]
+    };
   }
 };
 </script>

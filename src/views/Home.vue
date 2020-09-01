@@ -12,62 +12,25 @@
       :margin="[10, 10]"
       :use-css-transforms="true"
     >
-      <grid-item
-        v-for="(item, idx) in layout"
-        :x="item.x"
-        :y="item.y"
-        :w="item.w"
-        :h="item.h"
-        :i="item.i"
-        :key="item.i"
-      >
+      <grid-item v-for="(item, idx) in layout" :x="item.x" :y="item.y" :w="item.w" :h="item.h" :i="item.i" :key="item.i">
         <div class="header">
-          <div @click="showDlg">{{ item.text }}</div>
-          <div class="opts" :class="item.spec ? 'long-list' : ''" hidden>
-            <b-pagination
-              v-if="idx == 2"
-              style="max-width:200px;margin-right:22px;"
-              size="sm"
-              v-model="currentPage"
-              :total-rows="rows"
-              :per-page="perPage"
-              aria-controls="my-table"
-            ></b-pagination>
-            <b-form-select
-              size="sm"
-              style="margin-right:4px;"
-              v-if="item.ops2"
-              v-model="item.val2"
-              :options="item.ops2"
-            ></b-form-select>
-            <b-form-select
-              style="min-width:100px;"
-              size="sm"
-              v-model="item.val"
-              :options="item.ops"
-            ></b-form-select>
+          <div>{{ item.text }}</div>
+          <div class="opts" :class="item.spec ? 'long-list' : ''">
+            <!-- <b-button style="min-width: 110px;margin-right:4px;" size="sm" v-if="item.spec" variant="info">報告完成時間</b-button> -->
+            <!-- <b-form-select size="sm" style="margin-right:4px;" v-if="item.ops3" v-model="item.val3" :options="item.ops3"></b-form-select> -->
+            <b-form-select size="sm" style="margin-right:4px;" v-if="item.ops2" v-model="item.val2" :options="item.ops2"></b-form-select>
+            <b-form-select size="sm" v-model="item.val" :options="item.ops"></b-form-select>
           </div>
         </div>
         <div class="dtc-chart-item">
-          <transition name="fade">
-            <!-- <Loading v-if="item.text === '陰性報告' && load1"></Loading>
-            <Loading v-if="item.text === '影像品質' && load2"></Loading>
-            <Loading v-if="item.text === '報告總量' && load3"></Loading>
-            <Loading v-if="item.text === '工作總量' && load4"></Loading>
-            <Loading v-if="item.text === '儀器使用' && load5"></Loading>
-            <Loading v-if="item.text === '完成時間' && load6"></Loading>
-            <Loading v-if="item.text === '逾時報告' && load7"></Loading>
-            <Loading v-if="item.text === '個別逾時' && load8"></Loading>-->
-          </transition>
-          <CstChart v-if="idx == 0" :time="item.val"></CstChart>
-          <ImgDtc v-if="idx == 1" :time="item.val"></ImgDtc>
-          <ReportNotDone v-if="idx == 2" :time="item.val" :page="currentPage"></ReportNotDone>
-          <b-select :options="years" v-model="year" class="years-dtc" v-if="idx == 3"></b-select>
-          <Workload v-if="idx == 3" :time="item.val" :type="item.val2"></Workload>
-          <Device v-if="idx == 4" :time="item.val"></Device>
-          <Finish v-if="idx == 5" :time="item.val" :type="item.val2"></Finish>
-          <Delay v-if="idx == 6" :time="item.val"></Delay>
-          <Person v-if="idx == 7" :time="item.val" :type="item.val2"></Person>
+          <CstChart v-if="idx == 0"></CstChart>
+          <ImgDtc v-if="idx == 1"></ImgDtc>
+          <ReportNotDone v-if="idx == 2"></ReportNotDone>
+          <Workload v-if="idx == 3"></Workload>
+          <Device v-if="idx == 4"></Device>
+          <Finish v-if="idx == 5"></Finish>
+          <Delay v-if="idx == 6"></Delay>
+          <Person v-if="idx == 7"></Person>
         </div>
       </grid-item>
     </grid-layout>
@@ -84,25 +47,12 @@ import ImgDtc from "@/components/home/Img";
 import Finish from "@/components/home/Finish";
 import Delay from "@/components/home/Delay";
 import Person from "@/components/home/Person";
-//import Loading from "@/components/home/Loading";
-import { store, mutations } from "@/store/global.js";
-
-Chart.defaults.global.defaultFontStyle = "bold";
-Chart.defaults.global.defaultFontColor = "#343a40";
-Chart.defaults.global.defaultFontFamily = "Microsoft JhengHei";
-Chart.helpers.merge(Chart.defaults.global.plugins.datalabels, {
-  anchor: "end",
-  align: "start"
-});
-
-let year = new Date().getFullYear() - 1911;
-const years = new Array(7).fill().map((s, i) => year - i);
 
 const timeOps = [
-  { value: 1, text: "過去30天" },
-  { value: 2, text: "過去90天" },
-  { value: 3, text: "過去180天" },
-  { value: 4, text: "過去365天" }
+  { value: 1, text: "按月統計" },
+  { value: 2, text: "按季統計" },
+  { value: 3, text: "按半年統計" },
+  { value: 4, text: "按年統計" }
 ];
 
 const personOps = [
@@ -115,92 +65,14 @@ const personOps = [
 const reportOps = [{ value: null, text: "選擇檢查儀器" }];
 
 const layout = [
-  {
-    x: 0,
-    y: 0,
-    w: 3,
-    h: 11,
-    text: "109年-役男人數",
-    i: "1",
-    val: 1,
-    ops: timeOps
-  },
-  {
-    x: 3,
-    y: 0,
-    w: 3,
-    h: 11,
-    text: "109年-役男體位",
-    i: "2",
-    val: 1,
-    ops: timeOps
-  },
-  {
-    x: 6,
-    y: 0,
-    w: 3,
-    h: 11,
-    text: "109年-常備役、替代役、免役",
-    i: "3",
-    val: 1,
-    ops: timeOps
-  },
-  {
-    x: 9,
-    y: 0,
-    w: 3,
-    h: 11,
-    text: "役男人數",
-    i: "4",
-    val: 1,
-    val2: 1,
-    ops: timeOps,
-    ops2: personOps
-  },
-  {
-    x: 0,
-    y: 4,
-    w: 3,
-    h: 11,
-    text: "109年-免役原因",
-    i: "5",
-    val: 1,
-    ops: timeOps
-  },
-  {
-    x: 3,
-    y: 4,
-    w: 3,
-    h: 11,
-    text: "109年-體檢人數及實際報到人數比率",
-    i: "6",
-    val: 1,
-    val2: null,
-    ops: timeOps,
-    ops2: []
-  },
-  {
-    x: 6,
-    y: 4,
-    w: 3,
-    h: 11,
-    text: "109年-免役原因",
-    i: "7",
-    val: 1,
-    ops: timeOps
-  },
-  {
-    x: 9,
-    y: 4,
-    w: 3,
-    h: 11,
-    text: "109年-役男分佈",
-    i: "8",
-    val: 1,
-    val2: null,
-    ops: timeOps,
-    ops2: []
-  }
+  { x: 0, y: 0, w: 3, h: 11, text: "陰性報告", i: "1", val: 1, ops: timeOps },
+  { x: 3, y: 0, w: 3, h: 11, text: "影像品質", i: "2", val: 1, val2: 1, ops: timeOps, ops2: [] },
+  { x: 6, y: 0, w: 3, h: 11, text: "報告未完成", i: "3", val: 1, ops: timeOps },
+  { x: 9, y: 0, w: 3, h: 11, text: "工作總量", i: "4", val: 1, val2: 1, ops: timeOps, ops2: personOps },
+  { x: 0, y: 4, w: 3, h: 11, text: "儀器使用", i: "5", val: 1, val2: 1, ops: timeOps, ops2: [] },
+  { x: 3, y: 4, w: 3, h: 11, text: "完成時間", i: "6", val: 1, val2: null, ops: timeOps, ops2: [] },
+  { x: 6, y: 4, w: 3, h: 11, text: "逾時報告", i: "7", val: 1, ops: timeOps },
+  { x: 9, y: 4, w: 3, h: 11, text: "個別逾時", i: "8", val: 1, val2: null, ops: timeOps, ops2: [] }
 ];
 
 export default {
@@ -215,53 +87,45 @@ export default {
     ImgDtc,
     Finish,
     Delay,
-    Person,
-    
+    Person
   },
   data() {
     return {
-      years,
-      year,
-      load1: true,
-      load2: true,
-      load3: true,
-      load4: true,
-      load5: true,
-      load6: true,
-      load7: true,
-      load8: true,
       layout,
+      //cmps: [CstChart, ImgDtc, ReportNotDone, Workload, Device, Finish, Person],
+      selected: null,
       timeOp4TestResult: 1,
-      timeOps,
-      currentPage: 1,
-      rows: 100,
-      perPage: 10
+      timeOps
     };
   },
-  computed: {
-    isLogin() {
-      return store.isLogin;
-    }
+  async created() {
+    let imgs = await window.axios.get("/GeneralData/SelectNoList?groupNo=ImageQuality");
+    let arr = [];
+    imgs = imgs.Items;
+    imgs.forEach(s => {
+      arr.push({ value: s.No, text: s.Name });
+    });
+    let reports = await window.axios.get("/employee/SelectList?staffType=35");
+    const persons = [...reports.Items.slice(0, 20).map(s => ({ text: s.Name, value: s.Name }))];
+    this.layout[1].ops2 = [...arr];
+    this.layout[1].val2 = arr[0].value;
+    const map = await window.axios.get("/api/Device");
+    arr = [];
+    map.Items.forEach(s => {
+      arr.push({ value: s.Id, text: s.Name });
+    });
+    this.layout[4].ops2 = arr;
+    this.layout[5].ops2 = [...reportOps, ...arr];
+    this.layout[4].val2 = arr[0].value;
+    this.layout[7].ops2 = [...persons];
+    this.layout[7].val2 = persons[0].value;
+    // arr = [...this.layout];
+    // arr.forEach((s, i) => {
+    //   s.cmp = this.cmps[i];
+    // });
+    // this.layout = [...arr];
   },
-  methods: {
-    subscribeMsg() {
-      this.$root.$on("陰性報告", s => (this.load1 = s));
-      this.$root.$on("影像品質", s => (this.load2 = s));
-      this.$root.$on("報告總量", s => (this.load3 = s));
-      this.$root.$on("工作總量", s => (this.load4 = s));
-      this.$root.$on("儀器使用", s => (this.load5 = s));
-      this.$root.$on("完成時間", s => (this.load6 = s));
-      this.$root.$on("逾時報告", s => (this.load7 = s));
-      this.$root.$on("個別逾時", s => (this.load8 = s));
-    },
-    showDlg() {
-      if (!window.dtcDebug) return;
-      this.$bvModal.show("dtcModifyReport");
-    }
-  },
-
-  async mounted() {},
-  async beforeCreate() {}
+  mounted() {}
 };
 </script>
 
@@ -274,6 +138,7 @@ export default {
 <style lang="scss" scoped>
 .dashboard {
   background: black !important;
+  margin-top: 56px;
   min-height: calc(100vh - 56px);
 }
 .vue-grid-item {
@@ -284,7 +149,6 @@ export default {
   .dtc-chart-item {
     width: 100%;
     max-height: calc(100% - 50px);
-    position: relative;
     // border: 1px solid white;
   }
   .header {
@@ -304,37 +168,5 @@ export default {
 }
 .long-list {
   width: 530px !important;
-}
-.loadingApi {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(#000, 0.7);
-  border-radius: 5px;
-  display: grid;
-  place-items: center;
-  color: white;
-  z-index: 99999999999999999999;
-}
-</style>
-
-<style>
-.fade-enter-active,
-.fade-leave-active {
-  transition: all 0.6s ease-in-out;
-}
-.fade-enter,
-.fade-leave-to {
-  opacity: 0;
-}
-.years-dtc {
-  position: absolute;
-  top: -45px;
-  left: 100px;
-  width: 130px;
 }
 </style>
