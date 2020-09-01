@@ -216,7 +216,7 @@ export default {
     Finish,
     Delay,
     Person,
-    Loading
+    
   },
   data() {
     return {

@@ -35,34 +35,12 @@ export default {
 
   methods: {
     async login() {
-      this.$root.$emit("loginSuccess", map);
-      const obj = {
-        Name: this.name,
-        Password: this.pwd,
-        IsLongTime: true,
-      };
-      try {
-        this.showLoading = true;
-        const map = await window.axios.post("auth/Login", obj);
-        this.showLoading = false;
-        mutations.login(map);
-        this.$root.$emit("loginSuccess", map);
-        this.$router.push("home");
-      } catch (e) {
-        this.showLoading = false;
-        this.$bvToast.toast(`帳號或密碼錯誤: ` + e, {
-          title: "登入失敗",
-          autoHideDelay: 8000,
-          variant: "danger",
-        });
-      }
+      sessionStorage.token = "123";
+      this.$router.push("home");
     },
   },
   async mounted() {
-    this.hotList = (await actions.getLoginHotList()).map((s) => ({
-      value: s.Id,
-      text: s.Name,
-    }));
+   
   },
 };
 </script>
